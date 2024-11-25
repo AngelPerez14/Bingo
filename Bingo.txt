@@ -1,0 +1,196 @@
+PROGRAMA BingoJuego
+
+TIPO
+  TableroBingo = MATRIZ[1..5, 1..5] DE Entero
+
+VARIABLES
+  tablero: TableroBingo
+  numeroActual: Entero
+  numSacados: ARRAY[1..75] DE Booleano
+  seguirJugando: Booleano
+
+FUNCIÓN GenerarTablero: TableroBingo
+  VARIABLES
+    numeroAleatorio, columna, fila, min, max: Entero
+    numerosUsados: ARRAY[1..75] DE Booleano
+    tableroTemp: TableroBingo
+
+  INICIO
+    Inicializar generador de números aleatorios
+    Para cada numeroAleatorio de 1 a 75 HACER
+      Inicializar numerosUsados[numeroAleatorio] a FALSO
+
+    Para cada columna de 1 a 5 HACER
+      SEGÚN columna HACER
+        CASO 1: min := 1; max := 15  // Rango para columna B
+        CASO 2: min := 16; max := 30  // Rango para columna I
+        CASO 3: min := 31; max := 45  // Rango para columna N
+        CASO 4: min := 46; max := 60  // Rango para columna G
+        CASO 5: min := 61; max := 75  // Rango para columna O
+
+      Para cada fila de 1 a 5 HACER
+        REPETIR
+          Generar numeroAleatorio dentro del rango (min, max)
+        HASTA QUE numeroAleatorio no haya sido usado
+
+        Marcar numerosUsados[numeroAleatorio] como VERDADERO
+        Asignar numeroAleatorio a tableroTemp[columna, fila]
+
+      FIN PARA
+    FIN PARA
+
+    Marcar el centro del tablero como espacio libre (tableroTemp[3, 3] := 0)
+    Devuelve tableroTemp
+  FIN FUNCIÓN
+
+PROCEDIMIENTO DibujarTablero(tablero: TableroBingo)
+  VARIABLES
+    columna, fila: Entero
+
+  INICIO
+    Cambiar color del texto a azul
+    Escribir borde superior del tablero
+    Para cada fila de 1 a 5 HACER
+      Escribir lado izquierdo del tablero
+      Para cada columna de 1 a 5 HACER
+        SI tablero[fila, columna] = 0 ENTONCES
+          Escribir ' * ' (espacio libre)
+        SINO
+          Escribir número del tablero
+      FIN PARA
+      Escribir lado derecho del tablero
+    FIN PARA
+    Escribir borde inferior del tablero
+    Restablecer color del texto a blanco
+  FIN PROCEDIMIENTO
+
+FUNCIÓN SacarNumero: Entero
+  VARIABLES
+    intento: Entero
+
+  INICIO
+    REPETIR
+      Generar intento aleatorio de 1 a 75
+    HASTA QUE intento no haya sido sacado
+    Marcar intento como sacado
+    Devuelve intento
+  FIN FUNCIÓN
+
+PROCEDIMIENTO MarcarNumero(VAR tablero: TableroBingo, numero: Entero)
+  VARIABLES
+    columna, fila: Entero
+    encontrado: Booleano
+
+  INICIO
+    encontrado := FALSO
+    Para cada columna de 1 a 5 HACER
+      Para cada fila de 1 a 5 HACER
+        SI tablero[columna, fila] = numero ENTONCES
+          Marcar tablero[columna, fila] como 0 (encontrado)
+          encontrado := VERDADERO
+          SALIR DEL BUCLE INTERNO
+      FIN PARA
+      SI encontrado ENTONCES
+        SALIR DEL BUCLE EXTERNO
+    FIN PARA
+  FIN PROCEDIMIENTO
+
+FUNCIÓN EsBingo: Booleano
+  VARIABLES
+    columna, fila: Entero
+    esLineaCompleta: Booleano
+
+  INICIO
+    // Revisar filas
+    Para cada fila de 1 a 5 HACER
+      esLineaCompleta := VERDADERO
+      Para cada columna de 1 a 5 HACER
+        SI tablero[columna, fila] <> 0 ENTONCES
+          esLineaCompleta := FALSO
+      FIN PARA
+      SI esLineaCompleta ENTONCES
+        Devuelve VERDADERO (Bingo en fila)
+    FIN PARA
+
+    // Revisar columnas
+    Para cada columna de 1 a 5 HACER
+      esLineaCompleta := VERDADERO
+      Para cada fila de 1 a 5 HACER
+        SI tablero[columna, fila] <> 0 ENTONCES
+          esLineaCompleta := FALSO
+      FIN PARA
+      SI esLineaCompleta ENTONCES
+        Devuelve VERDADERO (Bingo en columna)
+    FIN PARA
+
+    // Diagonal principal
+    esLineaCompleta := VERDADERO
+    Para cada fila de 1 a 5 HACER
+      SI tablero[fila, fila] <> 0 ENTONCES
+        esLineaCompleta := FALSO
+    FIN PARA
+    SI esLineaCompleta ENTONCES
+      Devuelve VERDADERO (Bingo en diagonal principal)
+
+    // Diagonal inversa
+    esLineaCompleta := VERDADERO
+    Para cada fila de 1 a 5 HACER
+      SI tablero[fila, 6 - fila] <> 0 ENTONCES
+        esLineaCompleta := FALSO
+    FIN PARA
+    SI esLineaCompleta ENTONCES
+      Devuelve VERDADERO (Bingo en diagonal inversa)
+
+    Devuelve FALSO (No hay bingo)
+  FIN FUNCIÓN
+
+INICIO PRINCIPAL
+  Limpiar la pantalla
+  seguirJugando := VERDADERO
+
+  // Inicializar el juego
+  Para cada numeroActual de 1 a 75 HACER
+    Inicializar numSacados[numeroActual] a FALSO
+  FIN PARA
+
+  tablero := GenerarTablero
+
+  // Mensaje inicial amigable
+  Cambiar color del texto a verde
+  Escribir borde superior del tablero
+  Escribir "BINGO"
+  Escribir borde inferior del tablero
+  Restablecer color del texto a blanco
+  Escribir "Tu carton:"
+  DibujarTablero(tablero)
+
+  // Bucle principal del juego
+  MIENTRAS seguirJugando HACER
+    Escribir "Presiona ENTER para sacar numero..."
+    Leer entrada
+
+    numeroActual := SacarNumero
+    Limpiar la pantalla
+
+    Cambiar color del texto a azul
+    Escribir borde superior
+    Escribir "Salió el número: ", numeroActual
+    Escribir borde inferior
+    Restablecer color del texto a gris
+
+    MarcarNumero(tablero, numeroActual)
+    DibujarTablero(tablero)
+
+    SI EsBingo(tablero) ENTONCES
+      Cambiar color del texto a verde
+      Escribir borde superior
+      Escribir "¡¡¡BINGO!!!"
+      Escribir borde inferior
+      Restablecer color del texto a blanco
+      romper el bucle
+    FIN SI
+  FIN MIENTRAS
+
+  Escribir "Presiona ENTER para salir..."
+  Leer entrada
+FIN PROGRAMA
